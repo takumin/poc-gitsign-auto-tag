@@ -9,7 +9,7 @@ on:
     inputs:
       version:
         description: "Tag version"
-        default: ""
+        default: "v1.0.0"
         required: false
         type: string
 permissions: {}
@@ -19,9 +19,48 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
-      contents: read
+      contents: write
+      id-token: write
+    env:
+      TAG_VERSION: ${{ github.event.inputs.version }}
     steps:
     - name: Checkout
       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       with:
         persist-credentials: false
+    - name: Setup aqua
+      uses: aquaproj/aqua-installer@5e54e5cee8a95ee2ce7c04cb993da6dfad13e59c # v3.1.2
+      with:
+        aqua_version: v2.51.1
+    - name: Install tools
+      shell: bash -euo pipefail {0}
+      run: |-
+        aqua i -t gitsign
+    - name: Setup git
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        TIMESTAMP_SERVER_URL: http://timestamp.digicert.com
+      shell: bash -euo pipefail {0}
+      run: |-
+        git config --local user.name "${GITHUB_SERVER_URL}/${GITHUB_WORKFLOW_REF}"
+        git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git config --local push.followTags true
+        git config --local commit.gpgsign true
+        git config --local tag.gpgsign true
+        git config --local gpg.format x509
+        git config --local gpg.x509.program gitsign
+        git config --local gitsign.matchCommitter true
+        git config --local gitsign.timestampURL "${TIMESTAMP_SERVER_URL}"
+        git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}"
+    - name: Release commit
+      shell: bash -euo pipefail {0}
+      run: |-
+        git commit -S --allow-empty -m "${TAG_VERSION}"
+    - name: Tagging version
+      shell: bash -euo pipefail {0}
+      run: |-
+        git tag -s -m "${TAG_VERSION}" "${TAG_VERSION}"
+    - name: Push repository
+      shell: bash -euo pipefail {0}
+      run: |-
+        git push
