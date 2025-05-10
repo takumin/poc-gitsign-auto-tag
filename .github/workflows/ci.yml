@@ -1,0 +1,27 @@
+name: CI
+on:
+  push:
+    branches:
+    - main
+    tags:
+    - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Tag version"
+        default: ""
+        required: false
+        type: string
+permissions: {}
+jobs:
+  ci:
+    name: CI
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+    - name: Checkout
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      with:
+        persist-credentials: false

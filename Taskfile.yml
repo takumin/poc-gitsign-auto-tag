@@ -1,0 +1,34 @@
+# https://taskfile.dev
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: '3'
+
+tasks:
+  default:
+    desc: '{{.TASK}}'
+    silent: true
+    aliases: [all]
+    cmds:
+    - aqua i -a
+    - yamlfmt .
+
+  gitsign:init:
+    desc: '{{.TASK}}'
+    cmds:
+    - git config --local commit.gpgsign true
+    - git config --local tag.gpgsign true
+    - git config --local gpg.x509.program gitsign
+    - git config --local gpg.format x509
+
+  gitsign:reset:
+    desc: '{{.TASK}}'
+    cmds:
+    - git config unset --local commit.gpgsign
+    - git config unset --local tag.gpgsign
+    - git config unset --local gpg.x509.program
+    - git config unset --local gpg.format
+
+  gitsign:commit:empty:
+    desc: '{{.TASK}}'
+    cmds:
+    - git commit --allow-empty --message="Signed commit"
