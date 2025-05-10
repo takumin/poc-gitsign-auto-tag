@@ -32,3 +32,8 @@ tasks:
     desc: '{{.TASK}}'
     cmds:
     - git commit --allow-empty --message="Signed commit"
+
+  gitsign:tag:*:
+    desc: '{{.TASK}}'
+    cmds:
+    - git tag -m='Signed tag' {{index .MATCH 0}}
